@@ -3,13 +3,13 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB6sstyerpeNiua2yndgJyRygxGEWcgVjU",
-  authDomain: "inventorytokomekkah.firebaseapp.com",
-  databaseURL: "https://inventorytokomekkah-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "inventorytokomekkah",
-  storageBucket: "inventorytokomekkah.firebasestorage.app",
-  messagingSenderId: "228675128689",
-  appId: "1:228675128689:web:8ef62b55a00d91c335fad0"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 const app_cloud = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
@@ -17,7 +17,6 @@ const app_cloud = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig
 export const db_cloud = getFirestore(app_cloud);
 export const auth_cloud = getAuth(app_cloud);
 
-// TAMBAHKAN BARIS INI sebagai alias agar file login lama tidak error
 export const auth = auth_cloud; 
 
 export { app_cloud };
