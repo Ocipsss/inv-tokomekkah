@@ -4,7 +4,17 @@ import Sidebar from "@/components/Sidebar"; // Ganti import
 
 export const metadata: Metadata = {
   title: "TokoMekkah Inventory",
+  description: "Sistem Manajemen Inventaris Toko Mekkah",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "TokoMekkah",
+    // startupImage: "/icons/splash.png", // Opsional jika ingin ada splash screen
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
