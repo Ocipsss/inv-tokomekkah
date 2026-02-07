@@ -6,7 +6,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db_local } from '@/lib/db';
 import { 
   PackagePlus, Barcode, MapPin, Wallet, 
-  ChevronLeft, Save, BookOpen, AlignLeft, RefreshCw, Layers 
+  ChevronLeft, Save, RefreshCw, Layers 
 } from "lucide-react";
 
 export default function AddProductPage() {
@@ -22,7 +22,7 @@ export default function AddProductPage() {
     kode: "",
     penerbit: "",
     kategori: "",
-    lokasi: "",
+    lokasi: "RAK ",
     hargaModal: "",
     hargaJual: "",
     stok: "",
@@ -42,6 +42,22 @@ export default function AddProductPage() {
   const generateSKU = () => {
     const randomNum = Math.floor(100000 + Math.random() * 900000);
     setFormData(prev => ({ ...prev, kode: `TM-${randomNum}` }));
+  };
+
+  // Fungsi untuk membersihkan form setelah simpan
+  const resetForm = () => {
+    setFormData({
+      nama: "",
+      kode: `TM-${Math.floor(100000 + Math.random() * 900000)}`,
+      penerbit: "",
+      kategori: "",
+      lokasi: "RAK ",
+      hargaModal: "",
+      hargaJual: "",
+      stok: "",
+      deskripsi: ""
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -73,8 +89,10 @@ export default function AddProductPage() {
         stok: Number(formData.stok),
         updatedAt: Date.now()
       });
+      
       alert("Barang berhasil disimpan!");
-      router.push("/products");
+      resetForm(); // Form bersih & layar naik ke atas
+      
     } catch (error) {
       console.error(error);
       alert("Gagal menyimpan barang.");
@@ -85,12 +103,8 @@ export default function AddProductPage() {
 
   return (
     <div className="pb-24">
-      <div className="bg-white p-4 border-b border-slate-100 flex items-center gap-4 sticky top-[65px] z-30">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition-all">
-          <ChevronLeft size={24} />
-        </button>
-        <h1 className="font-black text-slate-800 tracking-tight text-sm uppercase">Input Barang Baru</h1>
-      </div>
+      {/* Header */}
+      
 
       <form onSubmit={handleSubmit} className="p-5 space-y-6">
         {/* Section 1: Identitas */}
@@ -129,7 +143,6 @@ export default function AddProductPage() {
           </div>
           <div className="bg-white p-5 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Kategori Dropdown */}
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase ml-2">Kategori</label>
                 <select 
@@ -145,7 +158,6 @@ export default function AddProductPage() {
                 </select>
               </div>
 
-              {/* Penerbit Dropdown */}
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase ml-2">Penerbit / Supplier</label>
                 <select 
@@ -167,10 +179,21 @@ export default function AddProductPage() {
               <div className="relative">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                 <input 
-                  type="text" placeholder="LOKASI (MISAL: RAK A-5)"
+                  type="text" 
+                  placeholder="MISAL: A-5"
                   className="w-full mt-1 p-4 pl-11 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 text-sm font-bold uppercase transition-all"
                   value={formData.lokasi}
-                  onChange={(e) => setFormData({...formData, lokasi: e.target.value.toUpperCase()})}
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase();
+                    if (!val.startsWith("RAK ")) {
+                      setFormData({ ...formData, lokasi: "RAK " });
+                    } else {
+                      setFormData({ ...formData, lokasi: val });
+                    }
+                  }}
+                  onFocus={() => {
+                    if (!formData.lokasi) setFormData({ ...formData, lokasi: "RAK " });
+                  }}
                 />
               </div>
             </div>
