@@ -2,57 +2,63 @@
 
 import { useEffect } from "react";
 import { db_cloud } from "@/lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, doc, setDoc, deleteDoc, query, where, getDocs } from "firebase/firestore";
 import { db_local } from "@/lib/db";
 
 export default function SyncManager() {
   useEffect(() => {
-    // 1. Hubungkan ke koleksi 'products' di Firestore
-    const productCol = collection(db_cloud, "products");
+    // --- 1. LOGIKA TERIMA DATA DARI CLOUD (DOWNLINK) ---
+    const setupDownlink = (collectionName: string, localTable: any, keyField: string) => {
+      const colRef = collection(db_cloud, collectionName);
+      return onSnapshot(colRef, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          const firestoreData = change.doc.data();
+          const existingLocalData = await localTable.where(keyField).equals(firestoreData[keyField]).first();
 
-    // 2. Gunakan onSnapshot untuk memantau perubahan secara Real-Time
-    const unsubscribe = onSnapshot(productCol, (snapshot) => {
-      snapshot.docChanges().forEach(async (change) => {
-        const firestoreData = change.doc.data();
-        
-        // Cari apakah barang ini sudah ada di Dexie lokal berdasarkan KODE
-        const existingLocalData = await db_local.products
-          .where("kode")
-          .equals(firestoreData.kode)
-          .first();
-
-        if (change.type === "added" || change.type === "modified") {
-          try {
-            // Gunakan .put() agar jika data sudah ada di-update, jika belum ada ditambah (Upsert)
-            // Jika sudah ada di lokal, kita sertakan 'id' lokalnya agar tidak duplikat
-            await db_local.products.put({
-              ...firestoreData,
-              id: existingLocalData?.id, // Pertahankan ID lokal jika ada
-            } as any);
-            
-            console.log(`Sync Success: ${firestoreData.nama} updated.`);
-          } catch (err) {
-            console.error("Sync Error (Add/Mod):", err);
+          if (change.type === "added" || change.type === "modified") {
+            await localTable.put({ ...firestoreData, id: existingLocalData?.id });
           }
-        }
-
-        if (change.type === "removed") {
-          try {
-            if (existingLocalData?.id) {
-              await db_local.products.delete(existingLocalData.id);
-              console.log(`Sync Success: ${firestoreData.nama} removed.`);
-            }
-          } catch (err) {
-            console.error("Sync Error (Delete):", err);
+          if (change.type === "removed" && existingLocalData?.id) {
+            await localTable.delete(existingLocalData.id);
           }
+        });
+      });
+    };
+
+    // --- 2. LOGIKA KIRIM DATA KE CLOUD (UPLINK) ---
+    // Hook ini akan terpanggil OTOMATIS setiap kali kamu db_local.table.add()
+    const setupUplink = (tableName: string, localTable: any, keyField: string) => {
+      // Hook saat data dibuat/ditambah
+      localTable.hook('creating', (primKey: any, obj: any) => {
+        const docId = obj[keyField].toString(); // Misal: nama kategori jadi ID dokumen
+        setDoc(doc(db_cloud, tableName, docId), obj);
+      });
+
+      // Hook saat data dihapus
+      localTable.hook('deleting', async (primKey: any) => {
+        const item = await localTable.get(primKey);
+        if (item) {
+          const docId = item[keyField].toString();
+          deleteDoc(doc(db_cloud, tableName, docId));
         }
       });
-    });
+    };
 
-    // Bersihkan listener saat aplikasi ditutup
-    return () => unsubscribe();
+    // Jalankan Downlink (Terima)
+    const unsubDownProd = setupDownlink("products", db_local.products, "kode");
+    const unsubDownCat = setupDownlink("categories", db_local.categories, "nama");
+    const unsubDownPub = setupDownlink("publishers", db_local.publishers, "nama");
+
+    // Jalankan Uplink (Kirim Otomatis)
+    setupUplink("products", db_local.products, "kode");
+    setupUplink("categories", db_local.categories, "nama");
+    setupUplink("publishers", db_local.publishers, "nama");
+
+    return () => {
+      unsubDownProd(); unsubDownCat(); unsubDownPub();
+      // Dexie hooks biasanya menetap selama aplikasi jalan
+    };
   }, []);
 
-  // Komponen ini tidak merender apapun di layar
   return null;
 }
