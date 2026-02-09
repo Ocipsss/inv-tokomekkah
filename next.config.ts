@@ -12,28 +12,39 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   },
 });
 
+/** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
-  // 1. Matikan warning Turbopack secara eksplisit
-  // @ts-ignore
-  turbopack: {},
+  // 1. Paksa penggunaan Webpack (Mematikan Turbopack secara internal)
+  // Kita gunakan any karena 'turbopack' bukan properti standar di interface NextConfig
+  ...({ turbopack: {} } as any),
 
-  // 2. Optimasi build agar tidak terkena "WorkerError" atau "Call retries exceeded"
+  // 2. Solusi untuk WorkerError & Memory Leak di Vercel
   experimental: {
-    // Menjalankan webpack build di worker terpisah untuk menghemat memori
     webpackBuildWorker: true,
-    // Memastikan output bersih
-    outputFileTracingRoot: undefined,
   },
 
-  // 3. Konfigurasi tambahan (Opsional tapi disarankan)
+  // 3. Tambahkan Webpack Config Manual untuk PWA
+  webpack: (config, { isServer }) => {
+    // Memastikan build tidak stuck saat memproses Service Worker
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
+
+  // 4. Pengaman Build
   eslint: {
-    // Agar build tidak gagal hanya karena typo minor atau linting
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Mencegah build gagal di Vercel karena error type yang tidak krusial
     ignoreBuildErrors: true,
   },
 };
 
-export default withPWA(nextConfig);
+// Pastikan urutan export seperti ini agar plugin PWA membungkus config kita dengan benar
+module.exports = withPWA(nextConfig);
