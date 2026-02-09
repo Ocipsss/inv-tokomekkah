@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
-import SyncManager from "@/components/SyncManager"; // Ini yang akan kita buat selanjutnya
+import SyncManager from "@/components/SyncManager";
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 export const metadata: Metadata = {
   title: "TokoMekkah Inventory",
   description: "Sistem Manajemen Inventaris Toko Mekkah",
