@@ -3,6 +3,7 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import SyncManager from "@/components/SyncManager"; // Ini yang akan kita buat selanjutnya
 
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: "TokoMekkah Inventory",
   description: "Sistem Manajemen Inventaris Toko Mekkah",

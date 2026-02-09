@@ -46,5 +46,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Pastikan urutan export seperti ini agar plugin PWA membungkus config kita dengan benar
-module.exports = withPWA(nextConfig);
+const configWithPWA = withPWA(nextConfig);
+
+module.exports = {
+  ...configWithPWA,
+  // Tambahkan ini untuk mematikan pengecekan statis yang bikin error build
+  trailingSlash: true,
+};
