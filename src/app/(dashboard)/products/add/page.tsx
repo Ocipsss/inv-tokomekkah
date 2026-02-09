@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db_local } from '@/lib/db';
+import { db_cloud } from '@/lib/firebase'; // Pastikan path ini sesuai dengan inisialisasi firebase kamu
+import { doc, setDoc } from 'firebase/firestore';
 import { 
   PackagePlus, Barcode, MapPin, Wallet, 
-  ChevronLeft, Save, RefreshCw, Layers 
+  Save, RefreshCw, Layers 
 } from "lucide-react";
 
 export default function AddProductPage() {
@@ -44,7 +46,6 @@ export default function AddProductPage() {
     setFormData(prev => ({ ...prev, kode: `TM-${randomNum}` }));
   };
 
-  // Fungsi untuk membersihkan form setelah simpan
   const resetForm = () => {
     setFormData({
       nama: "",
@@ -67,35 +68,39 @@ export default function AddProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.kategori) {
-      alert("Silakan pilih kategori terlebih dahulu!");
-      return;
-    }
-    if (!formData.penerbit) {
-      alert("Silakan pilih penerbit terlebih dahulu!");
+    if (!formData.kategori || !formData.penerbit) {
+      alert("Silakan pilih kategori dan penerbit terlebih dahulu!");
       return;
     }
 
     setLoading(true);
     try {
-      await db_local.products.add({
-        ...formData,
+      const cleanData = {
         nama: formData.nama.toUpperCase(),
+        kode: formData.kode,
         penerbit: formData.penerbit.toUpperCase(),
         kategori: formData.kategori.toUpperCase(),
         lokasi: formData.lokasi.toUpperCase(),
         hargaModal: parseNumber(formData.hargaModal),
         hargaJual: parseNumber(formData.hargaJual),
         stok: Number(formData.stok),
+        deskripsi: formData.deskripsi,
         updatedAt: Date.now()
-      });
+      };
+
+      // 1. Simpan ke Database Lokal (Dexie)
+      await db_local.products.add(cleanData);
       
-      alert("Barang berhasil disimpan!");
-      resetForm(); // Form bersih & layar naik ke atas
+      // 2. Simpan ke Cloud (Firestore)
+      // Kita gunakan 'kode' sebagai ID Dokumen agar sinkronisasi lebih mudah dilakukan
+      await setDoc(doc(db_cloud, "products", cleanData.kode), cleanData);
+      
+      alert("Barang berhasil disimpan di Cloud & Lokal!");
+      resetForm();
       
     } catch (error) {
-      console.error(error);
-      alert("Gagal menyimpan barang.");
+      console.error("Gagal sinkron:", error);
+      alert("Gagal menyimpan ke Cloud. Pastikan internet stabil.");
     } finally {
       setLoading(false);
     }
@@ -103,9 +108,6 @@ export default function AddProductPage() {
 
   return (
     <div className="pb-24">
-      {/* Header */}
-      
-
       <form onSubmit={handleSubmit} className="p-5 space-y-6">
         {/* Section 1: Identitas */}
         <div className="space-y-4">

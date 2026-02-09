@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar"; // Ganti import
+import Sidebar from "@/components/Sidebar";
+import SyncManager from "@/components/SyncManager"; // Ini yang akan kita buat selanjutnya
 
 export const metadata: Metadata = {
   title: "TokoMekkah Inventory",
@@ -10,7 +11,6 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "TokoMekkah",
-    // startupImage: "/icons/splash.png", // Opsional jika ingin ada splash screen
   },
   formatDetection: {
     telephone: false,
@@ -28,13 +28,23 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id">
-      <body className="bg-slate-100 flex justify-center min-h-screen">
-        <main className="w-full max-w-md bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
-          <Sidebar /> {/* Sidebar menggantikan BottomNav */}
-          <section className="min-h-[calc(100vh-64px)]">
-            {children}
-          </section>
-        </main>
+      <body className="bg-slate-50 text-slate-900 min-h-screen antialiased">
+        {/* Komponen Tak Terlihat: Menangani sinkronisasi Firebase -> Dexie */}
+        <SyncManager />
+
+        <div className="flex flex-col md:flex-row min-h-screen">
+          {/* Sidebar Area */}
+          <Sidebar />
+
+          {/* Area Konten Utama */}
+          <main className="flex-1 w-full relative">
+            <div className="max-w-7xl mx-auto p-4 md:p-8 lg:p-10">
+              <section className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 min-h-[85vh] p-4 md:p-6 overflow-hidden">
+                {children}
+              </section>
+            </div>
+          </main>
+        </div>
       </body>
     </html>
   );
