@@ -27,6 +27,12 @@ export interface Publisher {
   nama: string;
 }
 
+// Interface untuk data Lokasi (BARU)
+export interface Location {
+  id?: number;
+  nama: string;
+}
+
 // Interface untuk data Staff
 export interface Staff {
   id?: number;
@@ -41,17 +47,19 @@ export class TokoMekkahDatabase extends Dexie {
   products!: Table<Product>;
   categories!: Table<Category>;
   publishers!: Table<Publisher>;
-  staff!: Table<Staff>; // Tabel baru
+  locations!: Table<Location>; // Tabel baru ditambahkan di sini
+  staff!: Table<Staff>;
 
   constructor() {
     super('TokoMekkahDB');
     
-    // Versi 4: Upgrade untuk mendukung manajemen Staff
-    this.version(4).stores({
+    // Versi 5: Upgrade untuk mendukung manajemen Lokasi Rak
+    this.version(5).stores({
       products: '++id, nama, kode, kategori, penerbit, updatedAt',
       categories: '++id, &nama',
       publishers: '++id, &nama',
-      staff: '++id, nama, jabatan, phone' // Indexing untuk pencarian staff
+      locations: '++id, &nama', // Indexing untuk Lokasi
+      staff: '++id, nama, jabatan, phone' 
     });
   }
 }

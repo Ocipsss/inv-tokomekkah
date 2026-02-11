@@ -100,14 +100,20 @@ export default function SyncManager() {
     const unsubCat = setupDownlink("categories", db_local.categories, "nama");
     const unsubPub = setupDownlink("publishers", db_local.publishers, "nama");
     const unsubStaff = setupDownlink("staff", db_local.staff, "nama");
+    const unsubLoc = setupDownlink("locations", db_local.locations, "nama"); // Tambah Downlink Lokasi
 
     setupUplink("products", db_local.products, "kode");
     setupUplink("categories", db_local.categories, "nama");
     setupUplink("publishers", db_local.publishers, "nama");
     setupUplink("staff", db_local.staff, "nama");
+    setupUplink("locations", db_local.locations, "nama"); // Tambah Uplink Lokasi
 
     return () => {
-      unsubProd(); unsubCat(); unsubPub(); unsubStaff();
+      unsubProd(); 
+      unsubCat(); 
+      unsubPub(); 
+      unsubStaff();
+      unsubLoc(); // Cleanup listener lokasi
     };
   }, []);
 

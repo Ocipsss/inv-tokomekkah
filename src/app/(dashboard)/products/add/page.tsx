@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // Import Link untuk navigasi ke halaman lokasi
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db_local } from '@/lib/db';
 import { 
@@ -16,13 +17,14 @@ export default function AddProductPage() {
   // Ambil data referensi dari database secara realtime
   const categories = useLiveQuery(() => db_local.categories.toArray());
   const publishers = useLiveQuery(() => db_local.publishers.toArray());
+  const locations = useLiveQuery(() => db_local.locations.toArray()); // Ambil data Lokasi Rak
 
   const [formData, setFormData] = useState({
     nama: "",
     kode: "",
     penerbit: "",
     kategori: "",
-    lokasi: "RAK ",
+    lokasi: "", // Default kosong agar user memilih
     hargaModal: "",
     hargaJual: "",
     stok: "",
@@ -50,7 +52,7 @@ export default function AddProductPage() {
       kode: `TM-${Math.floor(100000 + Math.random() * 900000)}`,
       penerbit: "",
       kategori: "",
-      lokasi: "RAK ",
+      lokasi: "",
       hargaModal: "",
       hargaJual: "",
       stok: "",
@@ -66,8 +68,8 @@ export default function AddProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.kategori || !formData.penerbit) {
-      alert("Silakan pilih kategori dan penerbit terlebih dahulu!");
+    if (!formData.kategori || !formData.penerbit || !formData.lokasi) {
+      alert("Silakan lengkapi kategori, penerbit, dan lokasi rak!");
       return;
     }
 
@@ -86,15 +88,14 @@ export default function AddProductPage() {
         updatedAt: Date.now()
       };
 
-      // 1. Simpan ke Database Lokal (Dexie)
       await db_local.products.add(cleanData);
       
-      alert("Barang berhasil disimpan di Cloud & Lokal!");
+      alert("Barang berhasil disimpan!");
       resetForm();
       
     } catch (error) {
-      console.error("Gagal sinkron:", error);
-      alert("Gagal menyimpan ke Cloud. Pastikan internet stabil.");
+      console.error("Gagal menyimpan:", error);
+      alert("Gagal menyimpan data.");
     } finally {
       setLoading(false);
     }
@@ -170,27 +171,22 @@ export default function AddProductPage() {
               </div>
             </div>
 
-            <div className="relative">
-              <label className="text-[10px] font-bold text-slate-400 uppercase ml-2">Lokasi Rak</label>
+            {/* DROPDOWN LOKASI RAK */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase ml-2 text-orange-600">Titik Lokasi Rak</label>
               <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="MISAL: A-5"
-                  className="w-full mt-1 p-4 pl-11 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 text-sm font-bold uppercase transition-all"
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
+                <select 
+                  required
+                  className="w-full p-4 pl-11 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 text-sm font-bold uppercase appearance-none cursor-pointer transition-all"
                   value={formData.lokasi}
-                  onChange={(e) => {
-                    const val = e.target.value.toUpperCase();
-                    if (!val.startsWith("RAK ")) {
-                      setFormData({ ...formData, lokasi: "RAK " });
-                    } else {
-                      setFormData({ ...formData, lokasi: val });
-                    }
-                  }}
-                  onFocus={() => {
-                    if (!formData.lokasi) setFormData({ ...formData, lokasi: "RAK " });
-                  }}
-                />
+                  onChange={(e) => setFormData({...formData, lokasi: e.target.value})}
+                >
+                  <option value="">-- PILIH RAK PENYIMPANAN --</option>
+                  {locations?.map((loc) => (
+                    <option key={loc.id} value={loc.nama}>{loc.nama}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

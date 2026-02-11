@@ -6,7 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { getCookie, deleteCookie } from "cookies-next";
 import { 
   LayoutDashboard, Package, PlusCircle, Users, 
-  Settings, Menu, X, LogOut, Layers, BookOpen, Lock 
+  Settings, Menu, X, LogOut, Layers, BookOpen, 
+  Lock, MapPin // <-- Tambahkan MapPin di sini
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -42,6 +43,7 @@ export default function Sidebar() {
       items: [
         { name: "Kategori Produk", icon: Layers, path: "/categories" },
         { name: "Daftar Penerbit", icon: BookOpen, path: "/publishers" },
+        { name: "Lokasi Rak", icon: MapPin, path: "/locations" }, // <-- Menu Baru
       ]
     }] : []),
     ...(role === 'admin' ? [{
