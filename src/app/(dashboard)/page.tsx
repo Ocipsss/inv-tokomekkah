@@ -1,17 +1,39 @@
 "use client";
 
 import React from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db_local } from '@/lib/db';
 import { 
-  Package, 
-  Layers, 
-  AlertTriangle, 
-  TrendingUp, 
-  History, 
-  ArrowUpRight,
-  ArrowDownRight
+  Package, Layers, AlertTriangle, TrendingUp, 
+  History, ArrowUpRight, ArrowDownRight, Loader2
 } from "lucide-react";
 
 export default function DashboardPage() {
+  // Ambil data asli dari Dexie
+  const products = useLiveQuery(() => db_local.products.toArray());
+  const categories = useLiveQuery(() => db_local.categories.toArray());
+
+  // Logika Perhitungan (Data Nyata)
+  const totalStok = products?.reduce((acc, item) => acc + (Number(item.stok) || 0), 0) || 0;
+  const totalVariasi = products?.length || 0;
+  const totalCat = categories?.length || 0;
+  const lowStockItems = products?.filter(item => Number(item.stok) <= 5) || [];
+  
+  // Ambil 3 data yang paling baru diupdate/ditambah
+  const recentUpdates = products 
+    ? [...products].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).slice(0, 3)
+    : [];
+
+  // Loading State agar tidak "flicker"
+  if (!products || !categories) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-300">
+        <Loader2 className="animate-spin mb-2" size={32} />
+        <p className="text-[10px] font-bold uppercase tracking-widest">Sinkronisasi Data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-5 space-y-8">
 
@@ -22,12 +44,12 @@ export default function DashboardPage() {
             <Package size={22} />
           </div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Item</p>
-            <h2 className="text-2xl font-black text-slate-800">1,240</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Stok</p>
+            <h2 className="text-2xl font-black text-slate-800">{totalStok.toLocaleString('id-ID')}</h2>
           </div>
           <div className="flex items-center text-emerald-500 text-[10px] font-bold">
             <ArrowUpRight size={12} />
-            <span>+12 Hari ini</span>
+            <span>{totalVariasi} Jenis Barang</span>
           </div>
         </div>
 
@@ -37,7 +59,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kategori</p>
-            <h2 className="text-2xl font-black text-slate-800">24</h2>
+            <h2 className="text-2xl font-black text-slate-800">{totalCat}</h2>
           </div>
           <div className="flex items-center text-slate-400 text-[10px] font-bold">
             <span>Aktif Terjaga</span>
@@ -45,26 +67,36 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Alert Stok Menipis */}
+      {/* Alert Stok Menipis (Hanya muncul jika ada data) */}
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <h3 className="font-black text-slate-800 text-sm uppercase tracking-tight">Perlu Perhatian</h3>
-          <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded-lg">3 Item</span>
+          <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${lowStockItems.length > 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'}`}>
+            {lowStockItems.length} Item
+          </span>
         </div>
         
-        <div className="bg-red-50 border border-red-100 rounded-3xl p-4 flex items-center gap-4">
-          <div className="bg-white p-3 rounded-2xl text-red-500 shadow-sm">
-            <AlertTriangle size={20} />
+        {lowStockItems.length > 0 ? (
+          <div className="bg-red-50 border border-red-100 rounded-3xl p-4 flex items-center gap-4">
+            <div className="bg-white p-3 rounded-2xl text-red-500 shadow-sm">
+              <AlertTriangle size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-slate-800 text-sm leading-none">Stok Hampir Habis!</p>
+              <p className="text-[11px] text-slate-500 mt-1 uppercase font-bold">
+                {lowStockItems[0].nama} sisa {lowStockItems[0].stok} pcs.
+              </p>
+            </div>
+            <button className="text-xs font-bold text-red-600 underline">Cek</button>
           </div>
-          <div className="flex-1">
-            <p className="font-bold text-slate-800 text-sm leading-none">Stok Hampir Habis!</p>
-            <p className="text-[11px] text-slate-500 mt-1">Al-Qur'an Madinah A5 tersisa 2 pcs.</p>
+        ) : (
+          <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-3xl text-center">
+             <p className="text-[11px] font-bold text-emerald-600 uppercase">Semua stok aman terjaga</p>
           </div>
-          <button className="text-xs font-bold text-red-600 underline">Cek</button>
-        </div>
+        )}
       </section>
 
-      {/* Aktivitas Terbaru */}
+      {/* Aktivitas Terbaru (Data Nyata dari Database) */}
       <section className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <h3 className="font-black text-slate-800 text-sm uppercase tracking-tight">Riwayat Terakhir</h3>
@@ -72,24 +104,25 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-2">
-          {/* Item Aktivitas */}
-          {[
-            { name: "Peci Rajut Putih", type: "Masuk", qty: "+50", time: "10 menit lalu", icon: <ArrowDownRight size={14}/>, color: "text-emerald-500", bg: "bg-emerald-50" },
-            { name: "Minyak Wangi Oud", type: "Keluar", qty: "-5", time: "1 jam lalu", icon: <ArrowUpRight size={14}/>, color: "text-orange-500", bg: "bg-orange-50" },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-50 rounded-2xl">
+          {recentUpdates.length > 0 ? recentUpdates.map((item, i) => (
+            <div key={item.id || i} className="flex items-center justify-between p-4 bg-white border border-slate-50 rounded-2xl">
               <div className="flex items-center gap-3">
-                <div className={`${item.bg} ${item.color} p-2 rounded-xl`}>
-                  {item.icon}
+                <div className="bg-emerald-50 text-emerald-500 p-2 rounded-xl">
+                  <ArrowDownRight size={14}/>
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800 text-xs">{item.name}</p>
-                  <p className="text-[10px] text-slate-400 font-medium">{item.time}</p>
+                  <p className="font-bold text-slate-800 text-xs uppercase">{item.nama}</p>
+                  <p className="text-[10px] text-slate-400 font-medium uppercase">Rak: {item.lokasi || '-'}</p>
                 </div>
               </div>
-              <span className={`text-xs font-black ${item.color}`}>{item.qty}</span>
+              <div className="text-right">
+                <span className="text-xs font-black text-blue-600">{item.stok}</span>
+                <p className="text-[8px] text-slate-300 font-bold uppercase tracking-tighter">Stok</p>
+              </div>
             </div>
-          ))}
+          )) : (
+            <p className="text-center py-5 text-[10px] text-slate-300 font-bold uppercase">Belum ada barang</p>
+          )}
         </div>
       </section>
 
@@ -105,12 +138,11 @@ export default function DashboardPage() {
           </div>
         </div>
         <ArrowUpRight className="relative z-10 opacity-60 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-        {/* Dekorasi Background */}
         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-600 rounded-full blur-3xl opacity-30"></div>
       </button>
       
       <p className="text-center text-[10px] text-slate-300 font-bold uppercase tracking-[0.2em] pt-4">
-        TokoMekkah V1.0 Beta
+        TokoMekkah V1.0 Stable
       </p>
     </div>
   );

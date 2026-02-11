@@ -5,18 +5,22 @@ import { db_cloud } from "@/lib/firebase";
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db_local } from "@/lib/db";
 
+// Flag global untuk mencegah "Loopback" (Cloud -> Lokal -> Cloud lagi)
+let isIncomingSync = false;
+
 export default function SyncManager() {
   useEffect(() => {
     // --- 1. LOGIKA TERIMA DATA DARI CLOUD (DOWNLINK) ---
-    // Mengambil data dari Firebase dan menyimpannya ke Dexie Lokal
     const setupDownlink = (collectionName: string, localTable: any, keyField: string) => {
       const colRef = collection(db_cloud, collectionName);
       
       return onSnapshot(colRef, (snapshot) => {
+        // Jika perubahan berasal dari pengiriman lokal yang sedang berlangsung, abaikan
+        if (snapshot.metadata.hasPendingWrites) return;
+
         snapshot.docChanges().forEach(async (change) => {
           const firestoreData = change.doc.data();
           
-          // Cari apakah data sudah ada di lokal berdasarkan kunci unik (kode/nama)
           const existingLocalData = await localTable
             .where(keyField)
             .equals(firestoreData[keyField])
@@ -24,24 +28,30 @@ export default function SyncManager() {
 
           if (change.type === "added" || change.type === "modified") {
             try {
-              // Gunakan .put() agar jika data sudah ada di-update, jika belum ada ditambah
-              // Sangat penting: sertakan ID lokal jika ditemukan agar tidak terjadi baris ganda
+              // NYALAKAN PROTEKSI: Beritahu Hook Uplink agar diam sebentar
+              isIncomingSync = true; 
+              
               await localTable.put({
                 ...firestoreData,
                 id: existingLocalData?.id, 
               });
+
+              // Matikan proteksi setelah operasi database selesai
+              setTimeout(() => { isIncomingSync = false; }, 200);
             } catch (err) {
+              isIncomingSync = false;
               console.error(`Sync Error [Downlink ${collectionName}]:`, err);
             }
           }
 
-          if (change.type === "removed") {
+          if (change.type === "removed" && existingLocalData?.id) {
             try {
-              if (existingLocalData?.id) {
-                await localTable.delete(existingLocalData.id);
-              }
+              isIncomingSync = true;
+              await localTable.delete(existingLocalData.id);
+              setTimeout(() => { isIncomingSync = false; }, 200);
             } catch (err) {
-              console.error(`Sync Error [Downlink Delete ${collectionName}]:`, err);
+              isIncomingSync = false;
+              console.error(`Sync Error [Delete ${collectionName}]:`, err);
             }
           }
         });
@@ -49,13 +59,12 @@ export default function SyncManager() {
     };
 
     // --- 2. LOGIKA KIRIM DATA KE CLOUD (UPLINK) ---
-    // Mengawasi perubahan di Dexie Lokal dan mengirimnya ke Firebase
     const setupUplink = (tableName: string, localTable: any, keyField: string) => {
-      // Hook saat data BARU dibuat
       localTable.hook('creating', (primKey: any, obj: any) => {
+        if (isIncomingSync) return; // CEGAH LOOP: Jangan kirim jika data datang dari cloud
+        
         const docId = obj[keyField]?.toString().trim();
         if (docId) {
-          // Kita gunakan setDoc dengan ID manual agar tidak ganda di Cloud
           setDoc(doc(db_cloud, tableName, docId), {
             ...obj,
             updatedAt: obj.updatedAt || Date.now()
@@ -63,11 +72,11 @@ export default function SyncManager() {
         }
       });
 
-      // Hook saat data DIUPDATE
       localTable.hook('updating', (mods: any, primKey: any, obj: any) => {
+        if (isIncomingSync) return; // CEGAH LOOP
+        
         const docId = obj[keyField]?.toString().trim();
         if (docId) {
-          // Kirim perubahan terbaru ke cloud
           setDoc(doc(db_cloud, tableName, docId), {
             ...obj,
             ...mods,
@@ -76,9 +85,9 @@ export default function SyncManager() {
         }
       });
 
-      // Hook saat data DIHAPUS
-      // 'obj' berisi data sebelum dihapus, kita butuh docId dari situ
       localTable.hook('deleting', (primKey: any, obj: any) => {
+        if (isIncomingSync) return; // CEGAH LOOP
+        
         if (obj && obj[keyField]) {
           const docId = obj[keyField].toString().trim();
           deleteDoc(doc(db_cloud, tableName, docId));
@@ -87,26 +96,18 @@ export default function SyncManager() {
     };
 
     // --- 3. EKSEKUSI SINKRONISASI ---
-    
-    // Aktifkan Downlink (Terima Data)
     const unsubProd = setupDownlink("products", db_local.products, "kode");
     const unsubCat = setupDownlink("categories", db_local.categories, "nama");
     const unsubPub = setupDownlink("publishers", db_local.publishers, "nama");
     const unsubStaff = setupDownlink("staff", db_local.staff, "nama");
 
-    // Aktifkan Uplink (Kirim Data Otomatis)
     setupUplink("products", db_local.products, "kode");
     setupUplink("categories", db_local.categories, "nama");
     setupUplink("publishers", db_local.publishers, "nama");
     setupUplink("staff", db_local.staff, "nama");
 
     return () => {
-      unsubProd();
-      unsubCat();
-      unsubPub();
-      unsubStaff();
-      // Hook Dexie bersifat global di instance db_local, 
-      // biasanya tidak perlu di-unsub secara manual per render.
+      unsubProd(); unsubCat(); unsubPub(); unsubStaff();
     };
   }, []);
 
