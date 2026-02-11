@@ -91,10 +91,6 @@ export default function AddProductPage() {
       // 1. Simpan ke Database Lokal (Dexie)
       await db_local.products.add(cleanData);
       
-      // 2. Simpan ke Cloud (Firestore)
-      // Kita gunakan 'kode' sebagai ID Dokumen agar sinkronisasi lebih mudah dilakukan
-      await setDoc(doc(db_cloud, "products", cleanData.kode), cleanData);
-      
       alert("Barang berhasil disimpan di Cloud & Lokal!");
       resetForm();
       
