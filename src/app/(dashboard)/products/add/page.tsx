@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db_local } from '@/lib/db';
-import { db_cloud } from '@/lib/firebase'; // Pastikan path ini sesuai dengan inisialisasi firebase kamu
-import { doc, setDoc } from 'firebase/firestore';
 import { 
   PackagePlus, Barcode, MapPin, Wallet, 
   Save, RefreshCw, Layers 
