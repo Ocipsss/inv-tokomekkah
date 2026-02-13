@@ -216,12 +216,10 @@ export default function ProductsPage() {
                   <span className="text-sm font-black text-slate-700 uppercase">{selectedProduct.penerbit}</span>
                 </div>
                 
-                {userRole === 'admin' && (
                   <div className="flex justify-between items-center pb-4 border-b border-slate-100 bg-blue-50/50 -mx-2 px-2 py-1 rounded-lg">
                     <span className="text-[10px] font-bold text-blue-600 uppercase">Harga Modal</span>
                     <span className="text-sm font-bold text-slate-600 font-mono">Rp{selectedProduct.hargaModal?.toLocaleString('id-ID')}</span>
                   </div>
-                )}
 
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-slate-400 uppercase">Harga Jual</span>
