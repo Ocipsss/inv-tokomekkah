@@ -1,15 +1,47 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import SyncManager from "@/components/SyncManager";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    // 1. Dorong state baru ke history agar kita bisa mencegat tombol back
+    window.history.pushState(null, "", window.location.href);
+
+    const handleBackButton = (event: PopStateEvent) => {
+      if (pathname !== "/") {
+        // 2. Jika posisi TIDAK di Beranda, balik ke Beranda dulu
+        router.push("/");
+      } else {
+        // 3. Jika SUDAH di Beranda, paksa keluar aplikasi
+        window.history.pushState(null, "", window.location.href); // Kunci agar tetap di state ini
+        window.close();
+        
+        // Cadangan jika window.close() tidak didukung browser
+        setTimeout(() => {
+          window.location.replace("about:blank");
+        }, 50);
+      }
+    };
+
+    window.addEventListener("popstate", handleBackButton);
+
+    return () => {
+      window.removeEventListener("popstate", handleBackButton);
+    };
+  }, [pathname, router]);
+
   return (
     <>
       {/* SyncManager aktif hanya di area dashboard */}
       <SyncManager />
 
-      <div className="flex flex-col md:flex-row min-h-screen">
+      <div className="flex flex-col md:flex-row min-h-screen bg-slate-50">
         {/* Sidebar Area */}
         <Sidebar />
 
