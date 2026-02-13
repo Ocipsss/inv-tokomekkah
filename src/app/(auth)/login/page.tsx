@@ -6,7 +6,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { setCookie } from "cookies-next";
 import { useRouter } from "next/navigation";
-import { LogIn } from "lucide-react";
+import { LogIn, Mail, Lock, Loader2, ShieldCheck } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
@@ -19,100 +19,121 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Autentikasi ke Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 2. Ambil dokumen User dari Firestore untuk cek Role
       const userDocRef = doc(db_cloud, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      let role = "staff"; // Default role
-
+      let role = "staff"; 
       if (userDoc.exists()) {
         role = userDoc.data().role || "staff";
       }
 
-      // 3. Simpan Role di Cookie (agar bisa dibaca Middleware Server-Side)
-      // Kita simpan selama 7 hari
       setCookie("user-role", role, { 
         maxAge: 60 * 60 * 24 * 7,
         path: "/", 
       });
 
-      // 4. Redirect ke Dashboard
       router.push("/");
-      router.refresh(); // Memastikan middleware mendeteksi cookie baru
+      router.refresh(); 
       
     } catch (error: any) {
       console.error("Login Error:", error);
-      alert("Login Gagal: " + (error.message || "Terjadi kesalahan"));
+      alert("Akses Ditolak: Periksa kembali email dan password Anda.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-blue-600 p-3 rounded-xl mb-4 text-white shadow-lg shadow-blue-200">
-            <LogIn size={28} />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-800 uppercase tracking-tight">
-            TokoMekkah
-          </h1>
-          <p className="text-slate-500 text-sm">Inventory System Login</p>
-        </div>
+    <div className="flex items-center justify-center min-h-screen bg-slate-50 p-6 relative overflow-hidden">
+      {/* Dekorasi Background */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-50" />
+      </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="text-sm font-semibold text-slate-700 ml-1">
-              Email
-            </label>
-            <input
-              type="email"
-              className="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-slate-800"
-              placeholder="admin@mekkah.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="text-sm font-semibold text-slate-700 ml-1">
-              Password
-            </label>
-            <input
-              type="password"
-              className="w-full p-3 mt-1 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-slate-800"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+      <div className="w-full max-w-[400px] relative z-10">
+        <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/60 border border-white">
           
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 active:scale-[0.98] transition-all disabled:bg-slate-300 disabled:pointer-events-none shadow-md shadow-blue-100"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Memproses...
-                </span>
-              ) : (
-                "Masuk Sekarang"
-              )}
-            </button>
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-blue-200 mb-4 rotate-3 hover:rotate-0 transition-transform duration-300">
+              <ShieldCheck size={32} strokeWidth={2.5} />
+            </div>
+            <h1 className="text-xl font-black text-slate-800 uppercase tracking-[0.2em]">
+              TokoMekkah
+            </h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+              Inventory Control System
+            </p>
           </div>
-        </form>
 
-        <p className="mt-8 text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} TokoMekkah Inventory System
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                Email
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={18} />
+                <input
+                  type="email"
+                  className="w-full p-4 pl-12 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white focus:border-blue-500 outline-none transition-all text-sm font-bold text-slate-800 shadow-sm"
+                  placeholder="name@mekkah.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                Password
+              </label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={18} />
+                <input
+                  type="password"
+                  className="w-full p-4 pl-12 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white focus:border-blue-500 outline-none transition-all text-sm font-bold text-slate-800 shadow-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-slate-900 text-white p-4 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 active:scale-[0.96] transition-all disabled:bg-slate-200 disabled:text-slate-400 shadow-xl shadow-slate-200 overflow-hidden relative"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <Loader2 className="animate-spin" size={18} />
+                    Authenticating...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    Masuk <LogIn size={16} />
+                  </span>
+                )}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-10 flex flex-col items-center gap-4">
+             <div className="h-[1px] w-12 bg-slate-100" />
+             <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em]">
+               System Version 1.0.4
+             </p>
+          </div>
+        </div>
+        
+        <p className="mt-6 text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+          Authorized personnel only.<br/>Unauthorized access is strictly prohibited.
         </p>
       </div>
     </div>

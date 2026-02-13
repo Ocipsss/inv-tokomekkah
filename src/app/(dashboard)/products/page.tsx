@@ -13,9 +13,8 @@ import {
   ChevronRight,
   Loader2,
   X,
-  Lock,
-  Eye,
-  Trash2
+  Trash2,
+  Edit3
 } from "lucide-react";
 
 export default function ProductsPage() {
@@ -26,7 +25,6 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  // Mengambil data dari Dexie secara Real-time
   const products = useLiveQuery(() => db_local.products.toArray());
 
   useEffect(() => {
@@ -46,17 +44,12 @@ export default function ProductsPage() {
       ).slice(0, 5)
     : [];
 
-  // Fungsi Hapus Barang
   const handleDelete = async (id: number) => {
-    const confirmDelete = confirm("⚠️ PERINGATAN: Apakah Anda yakin ingin menghapus barang ini? Data yang dihapus tidak dapat dikembalikan.");
-    
-    if (confirmDelete) {
+    if (confirm("⚠️ Hapus barang ini dari gudang?")) {
       try {
         await db_local.products.delete(id);
-        setSelectedProduct(null); // Tutup modal setelah hapus
-        alert("Barang berhasil dihapus dari sistem.");
+        setSelectedProduct(null);
       } catch (error) {
-        console.error("Gagal menghapus:", error);
         alert("Gagal menghapus data.");
       }
     }
@@ -76,22 +69,23 @@ export default function ProductsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="animate-spin text-blue-600" size={32} />
-        <p className="text-sm font-bold text-slate-400 mt-4">Memuat data gudang...</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-4">Sinkronisasi Gudang...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-2 pb-24">
-      {/* Search Header Section */}
-      <div className="space-y-4 mb-6 relative" ref={suggestionRef}>
+    <div className="p-2 pb-24 max-w-5xl mx-auto space-y-3">
+      
+      {/* Search Header - Sticky & Rapet */}
+      <div className="sticky top-2 z-[100] transition-all" ref={suggestionRef}>
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={16} />
           <input 
             type="text"
-            placeholder="Cari nama atau kode barang..."
-            className={`w-full p-2 pl-12 bg-white border border-slate-100 outline-none shadow-sm text-sm font-medium transition-all ${
-              showSuggestions && suggestions?.length ? "rounded-t-[1rem] border-b-transparent" : "rounded-[1rem]"
+            placeholder="Cari Produk atau SKU..."
+            className={`w-full p-3.5 pl-11 bg-white border border-slate-100 outline-none shadow-md text-xs font-bold transition-all ${
+              showSuggestions && suggestions?.length ? "rounded-t-xl" : "rounded-xl"
             } focus:ring-2 focus:ring-blue-500`}
             value={searchTerm}
             onChange={(e) => {
@@ -105,13 +99,14 @@ export default function ProductsPage() {
               onClick={() => {setSearchTerm(""); setShowSuggestions(false);}}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           )}
         </div>
 
+        {/* Suggestions List */}
         {showSuggestions && suggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 w-full bg-white border-x border-b border-slate-100 rounded-b-[1rem] shadow-xl z-50 overflow-hidden">
+          <div className="absolute top-full left-0 w-full bg-white border-x border-b border-slate-100 rounded-b-xl shadow-2xl z-50 overflow-hidden">
             {suggestions.map((p) => (
               <div 
                 key={p.id}
@@ -120,140 +115,135 @@ export default function ProductsPage() {
                   setShowSuggestions(false);
                   setSelectedProduct(p);
                 }}
-                className="px-5 py-3 hover:bg-slate-50 flex items-center gap-3 cursor-pointer border-t border-slate-50"
+                className="px-4 py-3 hover:bg-blue-50 flex items-center justify-between cursor-pointer border-t border-slate-50 transition-colors"
               >
-                <Search size={14} className="text-slate-300" />
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-slate-700">{p.nama}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase">{p.kode}</span>
+                  <span className="text-[11px] font-bold text-slate-700 uppercase">{p.nama}</span>
+                  <span className="text-[9px] text-slate-400 font-bold uppercase">{p.kode}</span>
                 </div>
+                <span className="text-[9px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-black">{p.lokasi}</span>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Main List Barang */}
-      <div className="space-y-3">
+      {/* Grid List - 1 Kolom HP, 2 Kolom Tablet, 3 Kolom Desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {filteredProducts.length > 0 ? filteredProducts.map((product) => (
           <div 
             key={product.id} 
             onClick={() => setSelectedProduct(product)} 
-            className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all cursor-pointer hover:border-blue-200"
+            className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3 active:scale-[0.98] transition-all cursor-pointer hover:border-blue-300 group"
           >
-            <div className="w-14 h-14 bg-slate-50 rounded-xl flex flex-col items-center justify-center border border-slate-100 text-blue-600 shrink-0">
-              <span className="text-[10px] font-black uppercase">{product.kategori?.substring(0,3) || 'ITM'}</span>
-              <span className="text-lg font-black">{product.stok}</span>
+            {/* Stok Badge */}
+            <div className={`w-11 h-11 rounded-lg flex flex-col items-center justify-center border shrink-0 ${
+              product.stok <= 5 ? 'bg-red-50 border-red-100 text-red-600' : 'bg-slate-50 border-slate-100 text-blue-600'
+            }`}>
+              <span className="text-[7px] font-black uppercase opacity-60">STOK</span>
+              <span className="text-sm font-black leading-none">{product.stok}</span>
             </div>
 
+            {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[9px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                  {product.kode}
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[8px] font-black bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                  {product.lokasi}
+                </span>
+                <span className="text-[8px] font-bold text-slate-300 uppercase truncate">
+                  {product.penerbit}
                 </span>
               </div>
-              <h3 className="font-bold text-slate-800 text-sm truncate uppercase">{product.nama}</h3>
-              <div className="flex items-center gap-3 mt-1">
-                <div className="flex items-center gap-1 text-slate-400">
-                  <BookOpen size={12} />
-                  <span className="text-[10px] font-medium truncate max-w-[80px] uppercase">{product.penerbit}</span>
-                </div>
-                <div className="flex items-center gap-1 text-orange-500">
-                  <MapPin size={12} />
-                  <span className="text-[10px] font-black">{product.lokasi}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-right shrink-0">
-              <p className="text-sm font-black text-slate-800">
+              <h3 className="font-bold text-slate-800 text-[11px] truncate uppercase leading-tight group-hover:text-blue-600 transition-colors">
+                {product.nama}
+              </h3>
+              <p className="text-[10px] font-black text-slate-900 mt-1">
                 {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(product.hargaJual)}
               </p>
-              <ChevronRight size={16} className="text-slate-300 ml-auto" />
             </div>
+
+            <ChevronRight size={14} className="text-slate-200 group-hover:text-blue-400 transition-colors" />
           </div>
         )) : (
-          <div className="text-center py-20 bg-slate-50 rounded-[1.5rem] border-2 border-dashed border-slate-200">
-            <PackageSearch className="mx-auto text-slate-300 mb-2" size={48} />
-            <p className="text-slate-400 font-bold text-sm">Barang tidak ditemukan</p>
+          <div className="col-span-full text-center py-16 bg-white rounded-xl border-2 border-dashed border-slate-100">
+            <PackageSearch className="mx-auto text-slate-200 mb-2" size={40} />
+            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Gudang Kosong / Tidak Ditemukan</p>
           </div>
         )}
       </div>
 
-      {/* MODAL DETAIL */}
+      {/* MODAL DETAIL - Bottom Sheet Style on Mobile */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedProduct(null)} />
-          
-          <div className="relative bg-white w-full max-w-lg rounded-[1.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
-            <div className="p-8">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <span className="text-[10px] font-black bg-blue-100 text-blue-600 px-3 py-1 rounded-lg uppercase tracking-widest">
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-2 sm:p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in" onClick={() => setSelectedProduct(null)} />
+          <div className="relative bg-white w-full max-w-md rounded-t-[2rem] sm:rounded-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full duration-300">
+            
+            <div className="h-1.5 w-12 bg-slate-100 rounded-full mx-auto mt-3 sm:hidden" />
+
+            <div className="p-5">
+              <div className="flex justify-between items-start mb-4">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded uppercase tracking-tighter">
                     {selectedProduct.kode}
                   </span>
-                  <h2 className="text-xl font-black text-slate-800 mt-3 uppercase leading-tight">{selectedProduct.nama}</h2>
+                  <h2 className="text-sm font-black text-slate-800 uppercase leading-tight pr-4">
+                    {selectedProduct.nama}
+                  </h2>
                 </div>
-                <button onClick={() => setSelectedProduct(null)} className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
-                  <X size={20} />
+                <button onClick={() => setSelectedProduct(null)} className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 transition-colors">
+                  <X size={18} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Stok Gudang</p>
-                  <p className="text-2xl font-black text-slate-800">{selectedProduct.stok} <span className="text-xs text-slate-400">Unit</span></p>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">Status Stok</p>
+                  <p className="text-lg font-black text-slate-800">{selectedProduct.stok} <span className="text-[10px] text-slate-400 uppercase">Unit</span></p>
                 </div>
-                <div className="bg-orange-50 p-5 rounded-[2rem] border border-orange-100">
-                  <p className="text-[10px] font-bold text-orange-400 uppercase mb-1">Lokasi Rak</p>
-                  <p className="text-2xl font-black text-orange-600">{selectedProduct.lokasi}</p>
+                <div className="bg-orange-50 p-3 rounded-xl border border-orange-100">
+                  <p className="text-[8px] font-bold text-orange-400 uppercase mb-1">Posisi Rak</p>
+                  <p className="text-lg font-black text-orange-600 uppercase">{selectedProduct.lokasi}</p>
                 </div>
               </div>
 
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                  <span className="text-xs font-bold text-slate-400 uppercase">Penerbit</span>
-                  <span className="text-sm font-black text-slate-700 uppercase">{selectedProduct.penerbit}</span>
+              <div className="bg-slate-50/50 rounded-xl p-3 border border-slate-100 space-y-2 mb-5">
+                <div className="flex justify-between text-[10px] font-bold uppercase">
+                  <span className="text-slate-400">Supplier</span>
+                  <span className="text-slate-700">{selectedProduct.penerbit}</span>
                 </div>
-                
-                  <div className="flex justify-between items-center pb-4 border-b border-slate-100 bg-blue-50/50 -mx-2 px-2 py-1 rounded-lg">
-                    <span className="text-[10px] font-bold text-blue-600 uppercase">Harga Modal</span>
-                    <span className="text-sm font-bold text-slate-600 font-mono">Rp{selectedProduct.hargaModal?.toLocaleString('id-ID')}</span>
-                  </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-400 uppercase">Harga Jual</span>
-                  <span className="text-xl font-black text-blue-600">
+                <div className="flex justify-between text-[10px] font-bold uppercase">
+                  <span className="text-slate-400">Kategori</span>
+                  <span className="text-slate-700">{selectedProduct.kategori}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+                  <span className="text-[10px] font-black text-slate-400 uppercase">Harga Jual</span>
+                  <span className="text-base font-black text-blue-600">
                     {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(selectedProduct.hargaJual)}
                   </span>
                 </div>
               </div>
 
-              {/* ACTION BUTTON BERDASARKAN ROLE */}
               {userRole === 'admin' ? (
-                <div className="grid grid-cols-12 gap-3">
+                <div className="flex gap-2">
                   <button 
                     onClick={() => router.push(`/products/edit/${selectedProduct.id}`)}
-                    className="col-span-9 bg-slate-900 text-white p-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                    className="flex-1 bg-slate-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg"
                   >
-                    <PackageSearch size={18} />
-                    Edit Barang
+                    <Edit3 size={14} /> Edit Barang
                   </button>
                   <button 
                     onClick={() => handleDelete(selectedProduct.id)}
-                    className="col-span-3 bg-red-50 text-red-500 p-5 rounded-[1.5rem] font-black border border-red-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
-                    title="Hapus Barang"
+                    className="w-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center border border-red-100 active:scale-95 transition-all"
                   >
-                    <Trash2 size={20} />
+                    <Trash2 size={18} />
                   </button>
                 </div>
               ) : (
                 <button 
                   onClick={() => setSelectedProduct(null)}
-                  className="w-full bg-blue-600 text-white p-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                  className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest"
                 >
-                  <Eye size={20} />
-                  Tutup Detail
+                  Selesai
                 </button>
               )}
             </div>
