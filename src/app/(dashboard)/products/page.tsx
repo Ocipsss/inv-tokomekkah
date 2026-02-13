@@ -82,7 +82,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="p-5 pb-24">
+    <div className="p-2 pb-24">
       {/* Search Header Section */}
       <div className="space-y-4 mb-6 relative" ref={suggestionRef}>
         <div className="relative group">
@@ -90,8 +90,8 @@ export default function ProductsPage() {
           <input 
             type="text"
             placeholder="Cari nama atau kode barang..."
-            className={`w-full p-4 pl-12 bg-white border border-slate-100 outline-none shadow-sm text-sm font-medium transition-all ${
-              showSuggestions && suggestions?.length ? "rounded-t-[1.5rem] border-b-transparent" : "rounded-[1.5rem]"
+            className={`w-full p-2 pl-12 bg-white border border-slate-100 outline-none shadow-sm text-sm font-medium transition-all ${
+              showSuggestions && suggestions?.length ? "rounded-t-[1rem] border-b-transparent" : "rounded-[1rem]"
             } focus:ring-2 focus:ring-blue-500`}
             value={searchTerm}
             onChange={(e) => {
@@ -111,7 +111,7 @@ export default function ProductsPage() {
         </div>
 
         {showSuggestions && suggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 w-full bg-white border-x border-b border-slate-100 rounded-b-[1.5rem] shadow-xl z-50 overflow-hidden">
+          <div className="absolute top-full left-0 w-full bg-white border-x border-b border-slate-100 rounded-b-[1rem] shadow-xl z-50 overflow-hidden">
             {suggestions.map((p) => (
               <div 
                 key={p.id}
@@ -139,9 +139,9 @@ export default function ProductsPage() {
           <div 
             key={product.id} 
             onClick={() => setSelectedProduct(product)} 
-            className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all cursor-pointer hover:border-blue-200"
+            className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all cursor-pointer hover:border-blue-200"
           >
-            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex flex-col items-center justify-center border border-slate-100 text-blue-600 shrink-0">
+            <div className="w-14 h-14 bg-slate-50 rounded-xl flex flex-col items-center justify-center border border-slate-100 text-blue-600 shrink-0">
               <span className="text-[10px] font-black uppercase">{product.kategori?.substring(0,3) || 'ITM'}</span>
               <span className="text-lg font-black">{product.stok}</span>
             </div>
@@ -173,7 +173,7 @@ export default function ProductsPage() {
             </div>
           </div>
         )) : (
-          <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+          <div className="text-center py-20 bg-slate-50 rounded-[1.5rem] border-2 border-dashed border-slate-200">
             <PackageSearch className="mx-auto text-slate-300 mb-2" size={48} />
             <p className="text-slate-400 font-bold text-sm">Barang tidak ditemukan</p>
           </div>
@@ -185,16 +185,16 @@ export default function ProductsPage() {
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedProduct(null)} />
           
-          <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
+          <div className="relative bg-white w-full max-w-lg rounded-[1.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
             <div className="p-8">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <span className="text-[10px] font-black bg-blue-100 text-blue-600 px-3 py-1 rounded-full uppercase tracking-widest">
+                  <span className="text-[10px] font-black bg-blue-100 text-blue-600 px-3 py-1 rounded-lg uppercase tracking-widest">
                     {selectedProduct.kode}
                   </span>
                   <h2 className="text-xl font-black text-slate-800 mt-3 uppercase leading-tight">{selectedProduct.nama}</h2>
                 </div>
-                <button onClick={() => setSelectedProduct(null)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+                <button onClick={() => setSelectedProduct(null)} className="p-2 bg-slate-50 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
                   <X size={20} />
                 </button>
               </div>
@@ -234,14 +234,14 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-12 gap-3">
                   <button 
                     onClick={() => router.push(`/products/edit/${selectedProduct.id}`)}
-                    className="col-span-9 bg-slate-900 text-white p-5 rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                    className="col-span-9 bg-slate-900 text-white p-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
                   >
                     <PackageSearch size={18} />
                     Edit Barang
                   </button>
                   <button 
                     onClick={() => handleDelete(selectedProduct.id)}
-                    className="col-span-3 bg-red-50 text-red-500 p-5 rounded-[1.8rem] font-black border border-red-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
+                    className="col-span-3 bg-red-50 text-red-500 p-5 rounded-[1.5rem] font-black border border-red-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
                     title="Hapus Barang"
                   >
                     <Trash2 size={20} />
@@ -250,7 +250,7 @@ export default function ProductsPage() {
               ) : (
                 <button 
                   onClick={() => setSelectedProduct(null)}
-                  className="w-full bg-blue-600 text-white p-5 rounded-[1.8rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+                  className="w-full bg-blue-600 text-white p-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
                   <Eye size={20} />
                   Tutup Detail

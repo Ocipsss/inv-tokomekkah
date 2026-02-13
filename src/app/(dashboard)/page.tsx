@@ -35,11 +35,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-5 space-y-8">
+    <div className="p-2 space-y-8">
 
       {/* Ringkasan Statistik Utama */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm space-y-3">
+        <div className="bg-white p-5 rounded-[1rem] border border-slate-100 shadow-sm space-y-3">
           <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
             <Package size={22} />
           </div>
@@ -53,7 +53,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm space-y-3">
+        <div className="bg-white p-5 rounded-[1rem] border border-slate-100 shadow-sm space-y-3">
           <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center">
             <Layers size={22} />
           </div>
@@ -90,7 +90,7 @@ export default function DashboardPage() {
             <button className="text-xs font-bold text-red-600 underline">Cek</button>
           </div>
         ) : (
-          <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-3xl text-center">
+          <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center">
              <p className="text-[11px] font-bold text-emerald-600 uppercase">Semua stok aman terjaga</p>
           </div>
         )}
@@ -127,7 +127,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Shortcut Cepat */}
-      <button className="w-full bg-slate-900 text-white p-5 rounded-[2rem] flex items-center justify-between group overflow-hidden relative active:scale-95 transition-all">
+      <button className="w-full bg-slate-900 text-white p-5 rounded-[1rem] flex items-center justify-between group overflow-hidden relative active:scale-95 transition-all">
         <div className="relative z-10 flex items-center gap-3">
           <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
             <TrendingUp size={20} />

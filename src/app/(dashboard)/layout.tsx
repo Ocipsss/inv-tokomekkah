@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Area Konten Utama dengan desain melengkung favoritmu */}
         <main className="flex-1 w-full relative">
           <div className="max-w-7xl mx-auto p-4 md:p-8 lg:p-10">
-            <section className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 min-h-[85vh] p-4 md:p-6 overflow-hidden">
+            <section className="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 min-h-[85vh] p-4 md:p-6 overflow-hidden">
               {children}
             </section>
           </div>
