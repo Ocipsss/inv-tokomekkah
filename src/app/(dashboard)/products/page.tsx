@@ -215,6 +215,14 @@ export default function ProductsPage() {
                   <span className="text-slate-400">Kategori</span>
                   <span className="text-slate-700">{selectedProduct.kategori}</span>
                 </div>
+                <div className="flex justify-between items-center py-2 border-t border-dashed border-slate-200">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    Harga Modal
+                  </span>
+                  <span className="text-xs font-bold text-rose-600 italic">
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(selectedProduct.hargaModal)}
+                  </span>
+                </div>
                 <div className="flex justify-between items-center pt-2 border-t border-slate-100">
                   <span className="text-[10px] font-black text-slate-400 uppercase">Harga Jual</span>
                   <span className="text-base font-black text-blue-600">
